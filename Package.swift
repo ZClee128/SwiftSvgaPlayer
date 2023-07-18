@@ -22,7 +22,10 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "SwiftSvgaPlayer",
-            dependencies: []),
+            dependencies: [
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+                .product(name: "ZipArchive", package: "ZipArchive"),
+            ]),
         .testTarget(
             name: "SwiftSvgaPlayerTests",
             dependencies: [

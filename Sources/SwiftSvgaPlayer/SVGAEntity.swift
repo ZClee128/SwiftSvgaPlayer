@@ -7,7 +7,8 @@
 
 import Foundation
 import QuartzCore
-import ZIPFoundation
+import ZipArchive
+import UIKit
 
 open class SVGASpriteEntity {
     /// 元件所对应的位图键名, 如果 imageKey 含有 .vector 后缀，该 sprite 为矢量图层 含有 .matte 后缀，该 sprite 为遮罩图层。
@@ -300,7 +301,8 @@ open class SVGAMovieEntity {
         }()
         
         if !FileManager.default.fileExists(atPath: tmpUnzipURL.path) {
-            try FileManager.default.unzipItem(at: storeURL, to: tmpUnzipURL)
+            SSZipArchive.unzipFile(atPath: storeURL.absoluteString, toDestination: tmpUnzipURL.absoluteString)
+//            try FileManager.default.unzipItem(at: storeURL, to: tmpUnzipURL)
         }
         
         let pbURL = tmpUnzipURL.appendingPathComponent("movie.binary")
