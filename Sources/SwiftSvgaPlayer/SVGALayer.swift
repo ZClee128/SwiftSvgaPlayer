@@ -1,9 +1,9 @@
 //
 //  SVGALayer.swift
-//  Pods
+//  
 //
-//  Created by clovelu on 2020/7/1.
-//
+//  Created by lizhicong on 2023/8/18.
+//  https://github.com/ZClee128/SwiftSvgaPlayer.git
 
 import UIKit
 import QuartzCore
@@ -86,11 +86,30 @@ open class SVGASpriteLayer: CALayer {
     public private(set) var vectorLayer: SVGAVectorLayer?
     public private(set) var bitmapLayer: SVGABitmapLayer?
     public private(set) var maskLayer: CAShapeLayer?
+    public var textLayer: CATextLayer?
+    private var textLayerAlignment: NSTextAlignment = .center
     
     override open var frame: CGRect {
         didSet {
             bitmapLayer?.frame = self.bounds
             vectorLayer?.frame = self.bounds
+            for sublayer in self.sublayers ?? [] {
+                if let textLayer = sublayer as? CATextLayer {
+                    var frame = textLayer.frame
+                    switch self.textLayerAlignment {
+                    case .left:
+                        frame.origin.x = 0.0
+                    case .center:
+                        frame.origin.x = (self.frame.size.width - textLayer.frame.size.width) / 2.0
+                    case .right:
+                        frame.origin.x = self.frame.size.width - textLayer.frame.size.width
+                    default:
+                        frame.origin.x = (self.frame.size.width - textLayer.frame.size.width) / 2.0
+                    }
+                    frame.origin.y = (self.frame.size.height - textLayer.frame.size.height) / 2.0
+                    textLayer.frame = frame
+                }
+            }
         }
     }
     
@@ -160,4 +179,33 @@ open class SVGASpriteLayer: CALayer {
             vectorLayer?.isHidden = true
         }
     }
+    
+    open func resetTextLayerProperties(attributedString: NSAttributedString) {
+        guard let paragraphStyle = attributedString.attribute(NSAttributedString.Key.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle else {
+            return
+        }
+        if paragraphStyle.lineBreakMode == .byTruncatingTail {
+            self.textLayer?.truncationMode = .end
+            self.textLayer?.isWrapped = false
+        }
+        else if paragraphStyle.lineBreakMode == .byTruncatingMiddle {
+            self.textLayer?.truncationMode = .middle
+            self.textLayer?.isWrapped = false
+        }
+        else if paragraphStyle.lineBreakMode == .byTruncatingHead {
+            self.textLayer?.truncationMode = .start
+            self.textLayer?.isWrapped = false
+        }
+        else {
+            self.textLayer?.truncationMode = .none
+            self.textLayer?.isWrapped = true
+        }
+        if paragraphStyle.alignment == .natural {
+            self.textLayerAlignment = .center
+        }
+        else {
+            self.textLayerAlignment = paragraphStyle.alignment
+        }
+    }
+
 }

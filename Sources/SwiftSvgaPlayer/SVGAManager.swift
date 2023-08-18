@@ -1,9 +1,9 @@
 //
 //  SVGALoader.swift
-//  Pods
+//  
 //
-//  Created by clovelu on 2020/7/2.
-//
+//  Created by lizhicong on 2023/8/18.
+//  https://github.com/ZClee128/SwiftSvgaPlayer.git
 
 import Foundation
 

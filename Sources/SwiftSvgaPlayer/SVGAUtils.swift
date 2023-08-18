@@ -1,9 +1,9 @@
 //
 //  SVGAUtils.swift
-//  FBSnapshotTestCase
+//  
 //
-//  Created by clovelu on 2020/7/1.
-//
+//  Created by lizhicong on 2023/8/18.
+//  https://github.com/ZClee128/SwiftSvgaPlayer.git
 
 import Foundation
 import CoreGraphics

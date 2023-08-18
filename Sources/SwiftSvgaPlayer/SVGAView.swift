@@ -1,9 +1,9 @@
 //
 //  SVGAView.swift
-//  Pods
 //
-//  Created by clovelu on 2020/6/30.
 //
+//  Created by lizhicong on 2023/8/18.
+//  https://github.com/ZClee128/SwiftSvgaPlayer.git
 
 import UIKit
 import QuartzCore
@@ -37,6 +37,7 @@ open class SVGAView: UIView {
     
     open private(set) var dynamicImages: [String: UIImage] = [:]
     open private(set) var dynamicHiddens: [String: Bool] = [:]
+    open private(set) var dynamicTexts: [String: NSAttributedString] = [:]
     
     open var autoPlayIfMove: Bool = true
     open var fillModel: FillModel = .forwards
@@ -132,6 +133,18 @@ open class SVGAView: UIView {
                 layer.spriteEntity = spriteEntity
                 layer.image = dynamicImages[key] ?? movieEntity?.image(for: key)
                 layer.dynamicHidden = dynamicHiddens[key] ?? false
+                if let text = self.dynamicTexts[key] {
+                    let bitmapSize = CGSize(width: (movieEntity?.images[key]?.size.width ?? 0) * (movieEntity?.images[key]?.scale ?? 0), height: (movieEntity?.images[key]?.size.height ?? 0) * (movieEntity?.images[key]?.scale ?? 0))
+                    let size = text.boundingRect(with: bitmapSize, options: .usesLineFragmentOrigin, context: nil).size
+                    let textLayer = CATextLayer()
+                    textLayer.contentsScale = UIScreen.main.scale
+                    textLayer.string = self.dynamicTexts[key]
+                    textLayer.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+                    layer.addSublayer(textLayer)
+                    layer.textLayer = textLayer
+                    layer.resetTextLayerProperties(attributedString: text)
+                }
+
                 
                 // 该图层是蒙层
                 if key.hasSuffix(".matte") {
@@ -333,7 +346,7 @@ protocol SVGAViewDynamicable {
 }
 
 extension SVGAView: SVGAViewDynamicable {
-    open func setImage(_ image:UIImage?, key:String) {
+    public func setImage(_ image:UIImage?, key:String) {
         if image == nil {
             dynamicImages.removeValue(forKey: key)
         } else {
@@ -347,7 +360,31 @@ extension SVGAView: SVGAViewDynamicable {
         }
     }
     
-    open func setHidden(_ hidden:Bool, key:String) {
+    public func setAttributedText(_ attributedText: NSAttributedString, forKey key: String) {
+        dynamicTexts[key] = attributedText
+        spriteLayers.filter { (layer) -> Bool in
+            return layer.spriteEntity?.imageKey == key
+        }.forEach { (layer) in
+            let bitmapSize = CGSize(width: (movieEntity?.images[key]?.size.width ?? 0) * (movieEntity?.images[key]?.scale ?? 0), height: (movieEntity?.images[key]?.size.height ?? 0) * (movieEntity?.images[key]?.scale ?? 0))
+            let size = attributedText.boundingRect(with: bitmapSize, options: .usesLineFragmentOrigin, context: nil).size
+            var textLayer: CATextLayer?
+            textLayer = layer.textLayer
+            if textLayer == nil {
+                textLayer = CATextLayer()
+                layer.addSublayer(textLayer!)
+                layer.textLayer = textLayer
+                layer.resetTextLayerProperties(attributedString: attributedText)
+            }
+            if textLayer != nil {
+                textLayer!.contentsScale = UIScreen.main.scale
+                textLayer!.string = attributedText
+                textLayer!.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+            }
+        }
+    }
+
+    
+    public func setHidden(_ hidden:Bool, key:String) {
         dynamicHiddens[key] = hidden
         spriteLayers.filter { (layer) -> Bool in
             return layer.spriteEntity?.imageKey == key
@@ -356,9 +393,10 @@ extension SVGAView: SVGAViewDynamicable {
         }
     }
     
-    open func clearDynamic() {
+    public func clearDynamic() {
         dynamicHiddens = [:]
         dynamicImages = [:]
+        dynamicTexts = [:]
     }
 }
 
@@ -372,12 +410,12 @@ extension SVGAView {
 }
 
 extension SVGAView {
-    open func setURLString(_ urlString: String?, handle: CompletionHandler? = nil) {
+    public func setURLString(_ urlString: String?, handle: CompletionHandler? = nil) {
         let url = urlString != nil ? URL(string: urlString!) : nil
         setURL(url, handle: handle)
     }
         
-    open func setURL(_ url: URL?, handle: CompletionHandler? = nil) {
+    public func setURL(_ url: URL?, handle: CompletionHandler? = nil) {
         self.url = url
         let task = SVGAManager.shared.download(url: url) { [weak self] (svga, error, tURL) in
             guard url == self?.url else { return }
@@ -391,7 +429,7 @@ extension SVGAView {
         self.task = task
     }
     
-    open func cancelLoading() {
+    public func cancelLoading() {
         task?.cancel()
         task = nil
     }
